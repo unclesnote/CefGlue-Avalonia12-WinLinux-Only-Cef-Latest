@@ -1,0 +1,141 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-demo-avalonia",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/CefGlue.Demo.Avalonia/CefGlue.Demo.Avalonia.csproj",
+        "-c",
+        "Debug",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "linux": {
+        "args": [
+          "build",
+          "${workspaceFolder}/CefGlue.Demo.Avalonia/CefGlue.Demo.Avalonia.csproj",
+          "-c",
+          "Debug",
+          "-r",
+          "linux-x64",
+          "/property:GenerateFullPaths=true",
+          "/consoleloggerparameters:NoSummary"
+        ]
+      },
+      "windows": {
+        "args": [
+          "build",
+          "${workspaceFolder}/CefGlue.Demo.Avalonia/CefGlue.Demo.Avalonia.csproj",
+          "-c",
+          "Debug",
+          "-r",
+          "win-x64",
+          "/property:GenerateFullPaths=true",
+          "/consoleloggerparameters:NoSummary"
+        ]
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "clean-demo-avalonia",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "clean",
+        "${workspaceFolder}/CefGlue.Demo.Avalonia/CefGlue.Demo.Avalonia.csproj",
+        "-c",
+        "Debug"
+      ],
+      "linux": {
+        "args": [
+          "clean",
+          "${workspaceFolder}/CefGlue.Demo.Avalonia/CefGlue.Demo.Avalonia.csproj",
+          "-c",
+          "Debug",
+          "-r",
+          "linux-x64"
+        ]
+      },
+      "windows": {
+        "args": [
+          "clean",
+          "${workspaceFolder}/CefGlue.Demo.Avalonia/CefGlue.Demo.Avalonia.csproj",
+          "-c",
+          "Debug",
+          "-r",
+          "win-x64"
+        ]
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "rebuild-demo-avalonia",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/CefGlue.Demo.Avalonia/CefGlue.Demo.Avalonia.csproj",
+        "-c",
+        "Debug",
+        "--no-incremental",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "linux": {
+        "args": [
+          "build",
+          "${workspaceFolder}/CefGlue.Demo.Avalonia/CefGlue.Demo.Avalonia.csproj",
+          "-c",
+          "Debug",
+          "-r",
+          "linux-x64",
+          "--no-incremental",
+          "/property:GenerateFullPaths=true",
+          "/consoleloggerparameters:NoSummary"
+        ]
+      },
+      "windows": {
+        "args": [
+          "build",
+          "${workspaceFolder}/CefGlue.Demo.Avalonia/CefGlue.Demo.Avalonia.csproj",
+          "-c",
+          "Debug",
+          "-r",
+          "win-x64",
+          "--no-incremental",
+          "/property:GenerateFullPaths=true",
+          "/consoleloggerparameters:NoSummary"
+        ]
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "clean-build-demo-avalonia",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "clean-demo-avalonia",
+        "rebuild-demo-avalonia"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "pack-nuget-release",
+      "detail": "Rebuild all CefGlue.Next NuGet packages (Release, Windows + Linux x64 only) into Nuget/output/<YYYYMMDD>_<HHMM>/",
+      "command": "bash",
+      "type": "process",
+      "args": [
+        "${workspaceFolder}/publish.sh"
+      ],
+      "group": "build",
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
