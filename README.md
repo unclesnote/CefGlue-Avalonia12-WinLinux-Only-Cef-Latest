@@ -20,6 +20,18 @@ Baseline: `Deon-Berlin/CefGlue` `main` (`4a09ce6`).
 | Runtime packages in `CefGlue.Next.Common` | Windows, macOS, Linux (x64 & ARM64 — 6 packages) | **Windows & Linux x64 only** (`CefGlue.WinLinuxOnly.targets` removes `cef.runtime.osx-*` and `*-arm64`) |
 | WPF | Supported | Not targeted |
 
+### Added Public API
+
+#### `RuntimeStyle` ([`2c29c63`](https://github.com/unclesnote/CefGlue-Avalonia12-WinLinux-Only-Cef-Latest/commit/2c29c63))
+
+```csharp
+// App-wide default (default: CefRuntimeStyle.Default)
+AvaloniaCefBrowser.DefaultRuntimeStyle = CefRuntimeStyle.Alloy;
+
+// Or per-instance
+var browser = new AvaloniaCefBrowser { RuntimeStyle = CefRuntimeStyle.Alloy };
+```
+
 ### Linux Behaviour (Linux-only; Windows unchanged)
 
 All items below apply **only on Linux**. **Windows** keeps upstream behaviour unchanged (`MultiThreadedMessageLoop = true`, native Windows IME, no polling timer, no signal/HarfBuzz workarounds).
@@ -44,9 +56,9 @@ All items below apply **only on Linux**. **Windows** keeps upstream behaviour un
 
 | Area | Parent (`Deon-Berlin/CefGlue`) | This Fork |
 | --- | --- | --- |
-| Local NuGet build | CI publish to NuGet.org | `./publish.sh` packs all 5 `CefGlue.Next.*` packages into `Nuget/output/<YYYYMMDD>_<HHMM>/` |
-| Demo & IDE workflow | None | `./run_demo.sh` (Win/Linux x64) and `.vscode/` (`tasks.json`, `launch.json`, `settings.json`) |
-| `.gitignore` | Standard | Also ignores `GPUCache/` and `DawnCache/` |
+| Local NuGet build | CI publish to NuGet.org | `./publish.sh` cleans root `Nuget/output/*.nupkg`, packs all 5 `CefGlue.Next.*` packages into `Nuget/output/<YYYYMMDD>_<HHMM>/`, and writes `head.txt` (HEAD commit hash & subject) |
+| Demo & IDE workflow | Single-browser demo | `./run_demo.sh` (Win/Linux x64), `.vscode/` (`tasks.json`, `launch.json`, `settings.json`), and Main (Reddit) / Google / Amazon multi-webview `IsVisible` switcher in `CefGlue.Demo.Avalonia` |
+| `.gitignore` | Ignores `NuGet/output/` and `*.nupkg` | Tracks `Nuget/output/**/*.nupkg` and ignores `GPUCache/` and `DawnCache/` |
 
 ## Fork Commands
 
