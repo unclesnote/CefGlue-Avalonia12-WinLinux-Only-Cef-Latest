@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform;
+using Avalonia.Reactive;
 using Avalonia.Threading;
 
 namespace Xilium.CefGlue.Avalonia.Platform
@@ -23,7 +24,7 @@ namespace Xilium.CefGlue.Avalonia.Platform
                     FixNativeNativeControlBounds();
                 }
             
-                this.GetPropertyChangedObservable(BoundsProperty).Subscribe(UpdateNativeControlBounds);
+                this.GetPropertyChangedObservable(BoundsProperty).Subscribe(new AnonymousObserver<AvaloniaPropertyChangedEventArgs>(UpdateNativeControlBounds));
             
                 AttachedToVisualTree += OnAttachedToVisualTree;
                 DetachedFromVisualTree += OnDetachedFromVisualTree;
@@ -43,7 +44,7 @@ namespace Xilium.CefGlue.Avalonia.Platform
         private void OnAttachedToVisualTree(object sender, VisualTreeAttachmentEventArgs e)
         {
             _isAttached = true;
-            if (e.Root is WindowBase rootWindow)
+            if (e.RootVisual is WindowBase rootWindow)
             {
                 rootWindow.Opened += OnRootWindowOpened;
             }
@@ -53,7 +54,7 @@ namespace Xilium.CefGlue.Avalonia.Platform
         private void OnDetachedFromVisualTree(object sender, VisualTreeAttachmentEventArgs e)
         {
             _isAttached = false;
-            if (e.Root is WindowBase rootWindow)
+            if (e.RootVisual is WindowBase rootWindow)
             {
                 rootWindow.Opened -= OnRootWindowOpened;
             }

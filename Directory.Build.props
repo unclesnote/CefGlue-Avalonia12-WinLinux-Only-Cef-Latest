@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project>
 
   <!-- Import central CEF version configuration -->
@@ -7,7 +7,7 @@
     <PropertyGroup>
         <DotnetVersion>net10.0</DotnetVersion>
         <LangVersion>latest</LangVersion>
-        <AvaloniaVersion>11.3.17</AvaloniaVersion>
+        <AvaloniaVersion>12.2.0</AvaloniaVersion>
         <CefUseCustomSubProcess>true</CefUseCustomSubProcess>
         <CefGluePackageNameSuffix>Next.</CefGluePackageNameSuffix>
         <CefGluePackageNamePrefix>CefGlue.$(CefGluePackageNameSuffix)</CefGluePackageNamePrefix>

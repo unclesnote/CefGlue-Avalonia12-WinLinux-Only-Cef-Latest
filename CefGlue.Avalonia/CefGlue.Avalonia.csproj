@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>$(DotnetVersion)</TargetFramework>
@@ -13,13 +13,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="CefGlue.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\CefGlue.Common\BaseCefBrowser.cs" Link="Common\BaseCefBrowser.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference PrivateAssets="all" Include="Avalonia" />
-    <PackageReference Include="ReactiveUI.Avalonia" />
-    <PackageReference Include="System.Reactive.Linq" />
   </ItemGroup>
 
   <ItemGroup>

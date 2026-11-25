@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -43,8 +43,8 @@
   <ItemGroup>
     <PackageReference Include="Dotnet.Bundle" />
     <PackageReference Include="Avalonia.Desktop" />
-    <PackageReference Include="Avalonia.Diagnostics" />
-    <PackageReference Include="ReactiveUI.Avalonia" />
+    <PackageReference Include="Avalonia.Themes.Simple" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
 
@@ -15,7 +15,7 @@ namespace Xilium.CefGlue.Avalonia.Platform
         public ExtendedAvaloniaPopup()
         {
             CanResize = false;
-            SystemDecorations = SystemDecorations.None;
+            WindowDecorations = WindowDecorations.None;
             Focusable = false;
             Topmost = true;
             ShowActivated = false;

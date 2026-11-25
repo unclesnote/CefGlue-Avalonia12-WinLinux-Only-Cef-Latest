@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Collections;
@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
+using Avalonia.Reactive;
 using Avalonia.Threading;
 using Xilium.CefGlue.Common.Helpers;
 using Xilium.CefGlue.Common.Platform;
@@ -133,7 +134,11 @@ namespace Xilium.CefGlue.Avalonia.Platform
 
         private void OnPointerExited(object sender, PointerEventArgs e)
         {
-            MouseLeave?.Invoke(e.AsCefMouseEvent(MousePositionReferential));
+            // Taking pointer capture can raise PointerExited while the pointer is still inside the browser.
+            if (e.Pointer.Captured != _control)
+            {
+                MouseLeave?.Invoke(e.AsCefMouseEvent(MousePositionReferential));
+            }
         }
 
         private void OnPointerMoved(object sender, PointerEventArgs e)
@@ -141,7 +146,7 @@ namespace Xilium.CefGlue.Avalonia.Platform
             MouseMoved?.Invoke(e.AsCefMouseEvent(MousePositionReferential));
         }
 
-        private void OnLostFocus(object sender, RoutedEventArgs e)
+        private void OnLostFocus(object sender, FocusChangedEventArgs e)
         {
             LostFocus?.Invoke();
         }
@@ -152,19 +157,22 @@ namespace Xilium.CefGlue.Avalonia.Platform
             _previousCursor = null;
             _currentDragCursor = null;
             _windowStateChangedObservable?.Dispose();
+            _windowStateChangedObservable = null;
             VisibilityChanged?.Invoke(false);
         }
 
         private void OnAttachedToVisualTree(object sender, VisualTreeAttachmentEventArgs e)
         {
             VisibilityChanged?.Invoke(true);
-            if (e.Root is Window newWindow)
+            if (e.RootVisual is Window newWindow)
             {
-                _windowStateChangedObservable = newWindow.GetPropertyChangedObservable(Window.WindowStateProperty).Subscribe(OnHostWindowStateChanged);
+                _windowStateChangedObservable?.Dispose();
+                _windowStateChangedObservable = newWindow.GetPropertyChangedObservable(Window.WindowStateProperty).Subscribe(new AnonymousObserver<AvaloniaPropertyChangedEventArgs>(OnHostWindowStateChanged));
             }
-            if (e.Root.RenderScaling != RenderSurface.DeviceScaleFactor)
+            var topLevel = TopLevel.GetTopLevel(_control);
+            if (topLevel != null && topLevel.RenderScaling != RenderSurface.DeviceScaleFactor)
             {
-                RenderSurface.DeviceScaleFactor = (float)e.Root.RenderScaling;
+                RenderSurface.DeviceScaleFactor = (float)topLevel.RenderScaling;
                 ScreenInfoChanged?.Invoke(RenderSurface.DeviceScaleFactor);
             }
         }
@@ -236,10 +244,15 @@ namespace Xilium.CefGlue.Avalonia.Platform
             var lastPointerEvent = this._lastPointerEvent; // story a copy, since this might be other thread
             if (lastPointerEvent != null)
             {
-                var dataObject = new DataObject();
-                dataObject.Set(DataFormats.Text, dragData.FragmentText);
+                var dataObject = new DataTransfer();
+                if (!string.IsNullOrEmpty(dragData.FragmentText))
+                {
+                    var item = new DataTransferItem();
+                    item.SetText(dragData.FragmentText);
+                    dataObject.Add(item);
+                }
 
-                var result = await Dispatcher.UIThread.InvokeAsync(() => DragDrop.DoDragDrop(lastPointerEvent, dataObject, allowedOps.AsDragDropEffects()));
+                var result = await Dispatcher.UIThread.InvokeAsync(() => DragDrop.DoDragDropAsync(lastPointerEvent, dataObject, allowedOps.AsDragDropEffects()));
                 this._lastPointerEvent = null;
                 _previousCursor = null;
                 _currentDragCursor = null;

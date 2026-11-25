@@ -1,4 +1,4 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using NUnit.Framework;
 using System.Threading.Tasks;
 using Xilium.CefGlue.Common.Events;
@@ -50,7 +50,7 @@ namespace CefGlue.Tests.Events
                 taskCompletionSource.SetResult(true);
             }
             Browser.LoadError += OnBrowserLoadError;
-            Browser.Address = "http://0.0.0.0"; // navigate to an invalid url
+            Browser.Address = "http://invalidurl"; // navigate to an invalid url
             await taskCompletionSource.Task;
         }
 
