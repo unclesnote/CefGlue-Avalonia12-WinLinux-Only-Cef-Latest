@@ -14,4 +14,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
+  <Import Project="$(MSBuildThisFileDirectory)CefGlue.WinLinuxOnly.targets"
+          Condition="Exists('$(MSBuildThisFileDirectory)CefGlue.WinLinuxOnly.targets')" />
+
 </Project>

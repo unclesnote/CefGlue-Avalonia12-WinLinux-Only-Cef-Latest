@@ -1,0 +1,10 @@
+<Project>
+  <!--
+    This fork targets Avalonia on Windows and Linux x64 only. Strip macOS and ARM64 CEF runtime
+    dependencies from the build and NuGet packages without editing upstream project files, so
+    upstream syncs stay clean.
+  -->
+  <ItemGroup>
+    <PackageReference Remove="cef.runtime.osx-x64;cef.runtime.osx-arm64;cef.runtime.win-arm64;cef.runtime.linux-arm64" />
+  </ItemGroup>
+</Project>
