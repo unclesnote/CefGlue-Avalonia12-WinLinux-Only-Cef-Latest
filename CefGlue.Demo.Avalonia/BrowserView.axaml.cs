@@ -1,8 +1,10 @@
-﻿using Avalonia.Controls;
+using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using System;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -16,27 +18,81 @@ namespace Xilium.CefGlue.Demo.Avalonia
 {
     public partial class BrowserView : UserControl
     {
+        private const string DefaultKey = "default";
+        private const string GoogleKey = "google";
+        private const string AmazonKey = "amazon";
+        private const string DefaultUrl = "https://www.reddit.com";
+        private const string GoogleUrl = "https://www.google.com";
+        private const string AmazonUrl = "https://www.amazon.com";
+
+        private readonly Grid _browserContainer;
+        private readonly TextBox _addressTextBox;
+        private readonly Dictionary<string, AvaloniaCefBrowser> _browsers = new();
+        private readonly Dictionary<AvaloniaCefBrowser, string> _titles = new();
         private AvaloniaCefBrowser browser;
 
         public BrowserView()
         {
             InitializeComponent();
 
-            var browserWrapper = this.FindControl<Decorator>("browserWrapper");
+            _browserContainer = this.FindControl<Grid>("browserContainer");
+            _addressTextBox = this.FindControl<TextBox>("addressTextBox");
 
-            browser = new AvaloniaCefBrowser();
-            browser.Address = "https://www.google.com";
-            browser.RegisterJavascriptObject(new BindingTestClass(), "boundBeforeLoadObject");
-            browser.LoadStart += OnBrowserLoadStart;
-            browser.TitleChanged += OnBrowserTitleChanged;
-            browser.LifeSpanHandler = new BrowserLifeSpanHandler();
-            browserWrapper.Child = browser;
+            ShowBrowser(DefaultKey, DefaultUrl);
+        }
+
+        private void ShowBrowser(string key, string initialUrl)
+        {
+            if (!_browsers.TryGetValue(key, out var target))
+            {
+                target = new AvaloniaCefBrowser();
+                target.Address = initialUrl;
+                target.RegisterJavascriptObject(new BindingTestClass(), "boundBeforeLoadObject");
+                target.LoadStart += OnBrowserLoadStart;
+                target.TitleChanged += OnBrowserTitleChanged;
+                target.LifeSpanHandler = new BrowserLifeSpanHandler();
+
+                _browsers[key] = target;
+                _browserContainer.Children.Add(target);
+            }
+
+            browser = target;
+
+            foreach (var entry in _browsers.Values)
+            {
+                entry.IsVisible = ReferenceEquals(entry, target);
+            }
+
+            if (_addressTextBox != null)
+            {
+                _addressTextBox.Text = target.Address;
+            }
+
+            if (_titles.TryGetValue(target, out var title))
+            {
+                TitleChanged?.Invoke(title);
+            }
+        }
+
+        private void OnMainButtonClick(object sender, RoutedEventArgs e)
+        {
+            ShowBrowser(DefaultKey, DefaultUrl);
+        }
+
+        private void OnGoogleButtonClick(object sender, RoutedEventArgs e)
+        {
+            ShowBrowser(GoogleKey, GoogleUrl);
+        }
+
+        private void OnAmazonButtonClick(object sender, RoutedEventArgs e)
+        {
+            ShowBrowser(AmazonKey, AmazonUrl);
         }
 
         protected override void OnPointerPressed(PointerPressedEventArgs e)
         {
             base.OnPointerPressed(e);
-            browser.Focus(NavigationMethod.Pointer);
+            browser?.Focus(NavigationMethod.Pointer);
         }
 
         static Task<object> AsyncCallNativeMethod(Func<object> nativeMethod)
@@ -62,6 +118,15 @@ namespace Xilium.CefGlue.Demo.Avalonia
 
         private void OnBrowserTitleChanged(object sender, string title)
         {
+            if (sender is AvaloniaCefBrowser sourceBrowser)
+            {
+                _titles[sourceBrowser] = title;
+                if (!ReferenceEquals(sourceBrowser, browser))
+                {
+                    return;
+                }
+            }
+
             TitleChanged?.Invoke(title);
         }
 
@@ -74,9 +139,12 @@ namespace Xilium.CefGlue.Demo.Avalonia
 
             Dispatcher.UIThread.Post(() =>
             {
-                var addressTextBox = this.FindControl<TextBox>("addressTextBox");
+                if (!ReferenceEquals(sender, browser))
+                {
+                    return;
+                }
 
-                addressTextBox.Text = e.Frame.Url;
+                _addressTextBox.Text = e.Frame.Url;
             });
         }
 
@@ -140,7 +208,14 @@ namespace Xilium.CefGlue.Demo.Avalonia
 
         public void Dispose()
         {
-            browser.Dispose();
+            foreach (var entry in _browsers.Values)
+            {
+                entry.Dispose();
+            }
+
+            _browsers.Clear();
+            _titles.Clear();
+            browser = null;
         }
 
         private class BrowserLifeSpanHandler : LifeSpanHandler
