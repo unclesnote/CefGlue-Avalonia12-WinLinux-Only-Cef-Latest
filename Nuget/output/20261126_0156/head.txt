@@ -1,0 +1,2 @@
+commit: 696ad4004a0894d9ce9a00bc2130bdbbfe074314
+subject: chore(publish): write HEAD commit hash and subject to head.txt
