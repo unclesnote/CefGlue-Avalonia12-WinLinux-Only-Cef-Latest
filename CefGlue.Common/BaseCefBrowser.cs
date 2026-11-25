@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Xilium.CefGlue.Common.Events;
 using Xilium.CefGlue.Common.Handlers;
@@ -42,6 +42,8 @@ namespace Xilium.CefGlue.Common
             {
                 _adapter = new CommonBrowserAdapter(this, nameof(BaseCefBrowser), CreateControl(), _logger, cefRequestContextFactory?.Invoke());
             }
+
+            _adapter.RuntimeStyle = DefaultRuntimeStyle;
         }
 
         ~BaseCefBrowser()
@@ -268,6 +270,93 @@ namespace Xilium.CefGlue.Common
         /// Must be set before the browser becomes initialized.
         /// </summary>
         public bool ShowDownloadBubble { get => _adapter.ShowDownloadBubble; set => _adapter.ShowDownloadBubble = value; }
+
+        /// <summary>
+        /// Gets or sets the application-wide default <see cref="CefRuntimeStyle"/> assigned to newly
+        /// created <see cref="BaseCefBrowser"/> instances when they are constructed.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Why this option is exposed:</b> Starting in CEF 128+, <see cref="CefRuntimeStyle.Default"/>
+        /// resolves to the Chrome runtime style, which wraps each browser in Chromium's full Chrome UI
+        /// layer and <c>SessionService</c>. Keeping this default preserves existing upstream behavior
+        /// for applications that rely on Chrome runtime features, while letting applications opt in
+        /// globally to <see cref="CefRuntimeStyle.Alloy"/> without modifying upstream defaults.
+        /// </para>
+        /// <para>
+        /// <b>Issue background:</b> When embedding multiple browsers backed by persistent
+        /// <see cref="CefRequestContext"/> profiles (<c>CachePath</c> set) with
+        /// <see cref="CefRequestContextSettings.PersistSessionCookies"/> enabled, CEF's
+        /// <c>ChromeBrowserContext</c> configures <c>prefs::kRestoreOnStartup = SessionStartupPref::kPrefValueLast</c>
+        /// on the profile (see CEF issue #3767). Under the Chrome runtime style, opening a saved
+        /// profile (for example a second site profile or after an unclean exit) can cause Chromium's
+        /// <c>SessionService</c>/<c>SessionRestore</c> to spawn an unintended standalone top-level
+        /// Chrome browser window (logged as <c>"Creating a chrome browser without a client"</c>)
+        /// alongside the embedded control. Setting <see cref="CefRuntimeStyle.Alloy"/> embeds a
+        /// lightweight content-layer browser (<c>AlloyBrowserHostImpl</c>) without a Chrome
+        /// <c>Browser</c> UI host or <c>SessionService</c>/<c>SessionRestore</c>, eliminating the
+        /// extra standalone window and Chrome UI overlays while preserving session cookie persistence.
+        /// </para>
+        /// <para>
+        /// Individual instances can still override <see cref="RuntimeStyle"/> before browser creation.
+        /// Windowless (OSR) browsers always use Alloy style in CEF regardless of this property, and
+        /// DevTools popups always request <see cref="CefRuntimeStyle.Chrome"/> as required by CEF.
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// Configure once at application startup before creating any browser controls:
+        /// <code>
+        /// AvaloniaCefBrowser.DefaultRuntimeStyle = CefRuntimeStyle.Alloy;
+        /// // or equivalently:
+        /// BaseCefBrowser.DefaultRuntimeStyle = CefRuntimeStyle.Alloy;
+        /// </code>
+        /// </example>
+        public static CefRuntimeStyle DefaultRuntimeStyle { get; set; } = CefRuntimeStyle.Default;
+
+        /// <summary>
+        /// Gets or sets the <see cref="CefRuntimeStyle"/> applied when creating this browser in
+        /// windowed mode. Initialized from <see cref="DefaultRuntimeStyle"/> at construction time
+        /// (which defaults to <see cref="CefRuntimeStyle.Default"/> for backwards compatibility).
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Why this option is exposed:</b> In CEF 128+, <see cref="CefRuntimeStyle.Default"/>
+        /// selects the Chrome runtime style, whereas some embedded webview scenarios require the
+        /// Chromium content-layer <see cref="CefRuntimeStyle.Alloy"/> behavior used in older CEF
+        /// releases. Exposing this per-instance property (together with <see cref="DefaultRuntimeStyle"/>)
+        /// preserves existing behavior by default while allowing selective or global opt-in.
+        /// </para>
+        /// <para>
+        /// <b>Issue background:</b> If you attach a persistent <see cref="CefRequestContext"/> with
+        /// <see cref="CefRequestContextSettings.PersistSessionCookies"/> set to <see langword="true"/>,
+        /// CEF enables <c>prefs::kRestoreOnStartup = kPrefValueLast</c> on that profile (CEF issue
+        /// #3767). With the Chrome runtime style, Chromium's <c>SessionService</c>/<c>SessionRestore</c>
+        /// may open a separate unmanaged Chrome window (<c>"Creating a chrome browser without a client"</c>)
+        /// when that profile is loaded. Setting <see cref="RuntimeStyle"/> to
+        /// <see cref="CefRuntimeStyle.Alloy"/> creates an <c>AlloyBrowserHostImpl</c> instead, which
+        /// prevents standalone session-restore windows and Chrome UI overlays (such as download bubbles)
+        /// while keeping session cookie persistence intact through <c>ChromeBrowserContext</c>.
+        /// </para>
+        /// <para>
+        /// Must be set before the native browser is created (before initial layout/attachment to the
+        /// visual tree). Windowless (OSR) browsers always use Alloy style in CEF, and DevTools
+        /// always uses <see cref="CefRuntimeStyle.Chrome"/>.
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// Per-instance configuration in C#:
+        /// <code>
+        /// var browser = new AvaloniaCefBrowser(GetRequestContext)
+        /// {
+        ///     RuntimeStyle = CefRuntimeStyle.Alloy
+        /// };
+        /// </code>
+        /// Or in AXAML:
+        /// <code>
+        /// &lt;cef:AvaloniaCefBrowser RuntimeStyle="Alloy" /&gt;
+        /// </code>
+        /// </example>
+        public CefRuntimeStyle RuntimeStyle { get => _adapter.RuntimeStyle; set => _adapter.RuntimeStyle = value; }
 
         /// <summary>
         /// Get or set the current zoom level. The default zoom level is 0.0.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Xilium.CefGlue.Common.Events;
 using Xilium.CefGlue.Common.Handlers;
@@ -180,6 +180,43 @@ namespace Xilium.CefGlue.Common
         /// Must be set before the browser is initialized.
         /// </summary>
         public bool ShowDownloadBubble { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the CEF runtime style applied to <see cref="CefWindowInfo.RuntimeStyle"/>
+        /// when creating a windowed browser.
+        /// <list type="bullet">
+        /// <item>
+        /// <description>
+        /// <see cref="CefRuntimeStyle.Default"/> (default): preserves existing upstream behavior,
+        /// which resolves to the Chrome runtime style in CEF 128+ (full Chrome UI layer,
+        /// download UI, and Chromium's <c>SessionService</c>).
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <description>
+        /// <see cref="CefRuntimeStyle.Chrome"/>: explicitly requests the Chrome runtime style.
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <description>
+        /// <see cref="CefRuntimeStyle.Alloy"/>: creates an Alloy-style embedded browser based on
+        /// the Chromium content layer without a Chrome <c>Browser</c> UI host or
+        /// <c>SessionService</c>/<c>SessionRestore</c>. Recommended when embedding multiple
+        /// persistent <see cref="CefRequestContext"/> profiles with
+        /// <see cref="CefRequestContextSettings.PersistSessionCookies"/> enabled, because CEF sets
+        /// <c>prefs::kRestoreOnStartup = kPrefValueLast</c> on those profiles (see CEF issue #3767),
+        /// which in Chrome style can cause Chromium to spawn an extra standalone Chrome window
+        /// ("Creating a chrome browser without a client") alongside the embedded control.
+        /// In Alloy style, session cookies remain persisted through <c>ChromeBrowserContext</c>
+        /// without triggering standalone session-restore windows or Chrome UI overlays.
+        /// </description>
+        /// </item>
+        /// </list>
+        /// Windowless (OSR) browsers always use Alloy style in CEF regardless of this value, and
+        /// DevTools windows explicitly request <see cref="CefRuntimeStyle.Chrome"/> as required by CEF.
+        /// Must be set before the browser is initialized.
+        /// </summary>
+        public CefRuntimeStyle RuntimeStyle { get; set; } = CefRuntimeStyle.Default;
 
         public CefBrowser Browser => _browser;
 
@@ -366,6 +403,12 @@ namespace Xilium.CefGlue.Common
 
         protected virtual void SetupBrowserView(CefWindowInfo windowInfo, int width, int height, IntPtr hostViewHandle)
         {
+            // Apply the configured runtime style before creating the child view.
+            // Leaving RuntimeStyle as Default preserves upstream Chrome-style behavior;
+            // setting it to Alloy embeds a content-layer Alloy browser without Chrome's
+            // Browser UI or SessionService/SessionRestore (preventing unintended standalone
+            // restore windows when PersistSessionCookies is enabled on persistent profiles).
+            windowInfo.RuntimeStyle = RuntimeStyle;
             windowInfo.StyleEx |= WindowStyleEx.WS_EX_NOACTIVATE; // disable window activation (prevent stealing focus)
             windowInfo.SetAsChild(hostViewHandle, new CefRectangle(0, 0, width, height));
         }
