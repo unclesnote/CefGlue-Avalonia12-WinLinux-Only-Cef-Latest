@@ -1,4 +1,4 @@
-﻿# Repository/Project Specific
+# Repository/Project Specific
 /src.g/
 
 # Repository/Project Shared
@@ -34,11 +34,15 @@
 CefGlue.BrowserProcess/Properties/PublishProfiles/
 
 #Nuget
-NuGet/output/
 packages/
 CefGlue.Interop.Gen/Classes.Handlers.tmpl/
 CefGlue.Interop.Gen/Classes.Proxies.tmpl/
 **/.DS_Store
 *.nupkg
+!Nuget/output/**/*.nupkg
 CefRuntime/redist
 LocalPackages
+
+# CEF runtime caches
+GPUCache/
+DawnCache/
