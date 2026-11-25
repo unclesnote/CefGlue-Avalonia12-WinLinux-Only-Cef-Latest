@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Xilium.CefGlue.Common.Handlers;
+using Xilium.CefGlue.Common.Platform;
 using Xilium.CefGlue.Common.Shared;
 
 namespace Xilium.CefGlue.Common
@@ -67,7 +68,15 @@ namespace Xilium.CefGlue.Common
                 
                 case CefRuntimePlatform.Linux:
                     settings.NoSandbox = true;
-                    settings.MultiThreadedMessageLoop = true;
+                    if (browserProcessHandler != null)
+                    {
+                        settings.MultiThreadedMessageLoop = false;
+                        settings.ExternalMessagePump = false;
+                    }
+                    else
+                    {
+                        settings.MultiThreadedMessageLoop = true;
+                    }
                     break;
             }
 
@@ -90,7 +99,10 @@ namespace Xilium.CefGlue.Common
 #endif
             };
             
-            CefRuntime.Initialize(new CefMainArgs(args), settings, new BrowserCefApp(customSchemes, flags, browserProcessHandler), IntPtr.Zero);
+            using (new LinuxSignalHandlerScope())
+            {
+                CefRuntime.Initialize(new CefMainArgs(args), settings, new BrowserCefApp(customSchemes, flags, browserProcessHandler), IntPtr.Zero);
+            }
 
             if (customSchemes != null)
             {

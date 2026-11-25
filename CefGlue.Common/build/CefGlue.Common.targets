@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
 
   <Target Name="ResolveVcvarsFile" Condition="'$(MSBuildRestoreSessionId)' == ''">
     <PropertyGroup>
@@ -42,6 +42,22 @@
       Since we are reaching the .exe at the compile time, the file name is "apphost.exe" instead and located at /obj folder
     -->
     <Exec Command="call &quot;$(VcvarsFile)&quot;&#xD;&#xA; editbin /STACK:0x800000 &quot;$(AppHostFile)&quot;&#xD;&#xA;" Condition="Exists('$(AppHostFile)')" />
+  </Target>
+
+  <!--
+    The cef.runtime.linux-* packages place icudtl.dat, *.pak and locales/ under Resources/,
+    whereas Chromium on Linux loads icudtl.dat from the directory containing libcef.so.
+    Copy Resources/ next to libcef.so so Linux executables and tests start cleanly.
+  -->
+  <Target Name="FlattenLinuxCefResources"
+          AfterTargets="CefRedistLinuxX64CopyResources;CefRedistLinuxArm64CopyResources;Build"
+          Condition="'$(MSBuildRestoreSessionId)' == '' AND $([MSBuild]::IsOSPlatform('Linux')) AND Exists('$(TargetDir)Resources\icudtl.dat')">
+    <ItemGroup>
+      <_LinuxCefResourceFile Include="$(TargetDir)Resources\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_LinuxCefResourceFile)"
+          DestinationFiles="@(_LinuxCefResourceFile->'$(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
