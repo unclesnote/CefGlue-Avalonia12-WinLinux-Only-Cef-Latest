@@ -60,5 +60,14 @@ for id in "${PACKAGE_IDS[@]}"; do
     FINAL_PACKAGES+=("$dst")
 done
 
+HEAD_HASH="$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")"
+HEAD_SUBJECT="$(git -C "$ROOT_DIR" log -1 --pretty=%s 2>/dev/null || echo "unknown")"
+HEAD_FILE="$RELEASE_DIR/head.txt"
+cat > "$HEAD_FILE" <<EOF
+commit: $HEAD_HASH
+subject: $HEAD_SUBJECT
+EOF
+
 echo "Packages ($RELEASE_DIR):"
-ls -lh "${FINAL_PACKAGES[@]}"
+ls -lh "${FINAL_PACKAGES[@]}" "$HEAD_FILE"
+cat "$HEAD_FILE"
